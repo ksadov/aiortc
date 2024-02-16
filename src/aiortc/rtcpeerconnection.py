@@ -289,7 +289,7 @@ class RTCPeerConnection(AsyncIOEventEmitter):
     :param configuration: An optional :class:`RTCConfiguration`.
     """
 
-    def __init__(self, configuration: Optional[RTCConfiguration] = None) -> None:
+    def __init__(self, configuration: Optional[RTCConfiguration] = None, port_range=None) -> None:
         super().__init__()
         self.__certificates = [RTCCertificate.generateCertificate()]
         self.__cname = f"{uuid.uuid4()}"
@@ -321,6 +321,7 @@ class RTCPeerConnection(AsyncIOEventEmitter):
         self.__currentRemoteDescription: Optional[sdp.SessionDescription] = None
         self.__pendingLocalDescription: Optional[sdp.SessionDescription] = None
         self.__pendingRemoteDescription: Optional[sdp.SessionDescription] = None
+        self.port_range = port_range
 
     @property
     def connectionState(self) -> str:
@@ -1045,7 +1046,7 @@ class RTCPeerConnection(AsyncIOEventEmitter):
 
     def __createDtlsTransport(self) -> RTCDtlsTransport:
         # create ICE transport
-        iceGatherer = RTCIceGatherer(iceServers=self.__configuration.iceServers)
+        iceGatherer = RTCIceGatherer(iceServers=self.__configuration.iceServers, port_range = self.port_range)
         iceGatherer.on("statechange", self.__updateIceGatheringState)
         iceTransport = RTCIceTransport(iceGatherer)
         iceTransport.on("statechange", self.__updateIceConnectionState)
