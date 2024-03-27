@@ -178,8 +178,7 @@ class SignalingUtilsTest(TestCase):
 
     def test_candidate_from_string(self):
         candidate = object_from_string(
-            '{"candidate": "candidate:0 1 UDP 2122252543 192.168.99.7 33543 typ host", '
-            '"id": "audio", "label": 0, "type": "candidate"}'
+            '{"candidate": "candidate:0 1 UDP 2122252543 192.168.99.7 33543 typ host", "id": "audio", "label": 0, "type": "candidate"}'
         )
         self.assertEqual(candidate.component, 1)
         self.assertEqual(candidate.foundation, "0")
@@ -205,6 +204,5 @@ class SignalingUtilsTest(TestCase):
         candidate.sdpMLineIndex = 0
         self.assertEqual(
             object_to_string(candidate),
-            '{"candidate": "candidate:0 1 UDP 2122252543 192.168.99.7 33543 typ host", '
-            '"id": "audio", "label": 0, "type": "candidate"}',
+            '{"candidate": "candidate:0 1 UDP 2122252543 192.168.99.7 33543 typ host", "id": "audio", "label": 0, "type": "candidate"}',
         )

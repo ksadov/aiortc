@@ -8,6 +8,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import av
+
 from aiortc.contrib.media import MediaBlackhole, MediaPlayer, MediaRecorder, MediaRelay
 from aiortc.mediastreams import AudioStreamTrack, MediaStreamError, VideoStreamTrack
 

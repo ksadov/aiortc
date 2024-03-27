@@ -14,6 +14,5 @@ class RTCSessionDescription:
     def __post_init__(self):
         if self.type not in {"offer", "pranswer", "answer", "rollback"}:
             raise ValueError(
-                "'type' must be in ['offer', 'pranswer', 'answer', 'rollback'] "
-                f"(got '{self.type}')"
+                f"'type' must be in ['offer', 'pranswer', 'answer', 'rollback'] (got '{self.type}')"
             )

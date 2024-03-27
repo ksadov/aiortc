@@ -3,6 +3,8 @@ import math
 import sys
 from unittest import TestCase
 
+from av import AudioFrame
+
 from aiortc import rtp
 from aiortc.rtcrtpparameters import RTCRtpHeaderExtensionParameters, RTCRtpParameters
 from aiortc.rtp import (
@@ -24,7 +26,6 @@ from aiortc.rtp import (
     unwrap_rtx,
     wrap_rtx,
 )
-from av import AudioFrame
 
 from .utils import load
 

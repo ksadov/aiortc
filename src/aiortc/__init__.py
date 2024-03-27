@@ -1,10 +1,11 @@
-# ruff: noqa: F401
+# flake8: noqa
 import logging
 
 import av.logging
 
+from .about import __version__
 from .exceptions import InvalidAccessError, InvalidStateError
-from .mediastreams import AudioStreamTrack, MediaStreamTrack, VideoStreamTrack
+from .mediastreams import MediaStreamTrack, VideoStreamTrack
 from .rtcconfiguration import RTCConfiguration, RTCIceServer
 from .rtcdatachannel import RTCDataChannel, RTCDataChannelParameters
 from .rtcdtlstransport import (
@@ -46,8 +47,6 @@ from .stats import (
     RTCStatsReport,
     RTCTransportStats,
 )
-
-__version__ = "1.8.0"
 
 # Disable PyAV's logging framework as it can lead to thread deadlocks.
 av.logging.restore_default_callback()

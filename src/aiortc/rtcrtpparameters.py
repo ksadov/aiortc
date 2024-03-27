@@ -119,8 +119,7 @@ class RTCRtpCapabilities:
 @dataclass
 class RTCRtcpFeedback:
     """
-    The :class:`RTCRtcpFeedback` dictionary provides information on RTCP feedback
-    messages.
+    The :class:`RTCRtcpFeedback` dictionary provides information on RTCP feedback messages.
     """
 
     type: str

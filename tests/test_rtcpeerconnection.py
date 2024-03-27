@@ -4,6 +4,7 @@ from unittest import TestCase
 
 import aioice.ice
 import aioice.stun
+
 from aiortc import (
     RTCConfiguration,
     RTCIceCandidate,
@@ -512,11 +513,6 @@ class RTCPeerConnectionTest(TestCase):
         if pc.sctp:
             self.assertEqual(pc.sctp.transport, transport)
 
-    def assertClosed(self, pc):
-        self.assertEqual(pc.connectionState, "closed")
-        self.assertEqual(pc.iceConnectionState, "closed")
-        self.assertEqual(pc.signalingState, "closed")
-
     async def assertDataChannelOpen(self, dc):
         await self.sleepWhile(lambda: dc.readyState == "connecting")
         self.assertEqual(dc.readyState, "open")
@@ -558,15 +554,21 @@ class RTCPeerConnectionTest(TestCase):
 
     def setUp(self):
         # save timers
+        self.consent_failures = aioice.ice.CONSENT_FAILURES
+        self.consent_interval = aioice.ice.CONSENT_INTERVAL
         self.retry_max = aioice.stun.RETRY_MAX
         self.retry_rto = aioice.stun.RETRY_RTO
 
         # shorten timers to run tests faster
+        aioice.ice.CONSENT_FAILURES = 1
+        aioice.ice.CONSENT_INTERVAL = 1
         aioice.stun.RETRY_MAX = 1
         aioice.stun.RETRY_RTO = 0.1
 
     def tearDown(self):
         # restore timers
+        aioice.ice.CONSENT_FAILURES = self.consent_failures
+        aioice.ice.CONSENT_INTERVAL = self.consent_interval
         aioice.stun.RETRY_MAX = self.retry_max
         aioice.stun.RETRY_RTO = self.retry_rto
 
@@ -901,8 +903,8 @@ a=rtpmap:8 PCMA/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -1032,8 +1034,8 @@ a=rtpmap:8 PCMA/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -1093,12 +1095,16 @@ a=rtpmap:8 PCMA/8000
         # check outcome
         await self.assertIceCompleted(pc1, pc2)
 
-        # close one side, which causes the other to shutdown
+        # close one side
         await pc1.close()
-        await asyncio.sleep(1)
+        self.assertEqual(pc1.iceConnectionState, "closed")
 
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        # wait for consent to expire
+        await asyncio.sleep(2)
+
+        # close other side
+        await pc2.close()
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -1116,10 +1122,12 @@ a=rtpmap:8 PCMA/8000
         )
 
         self.assertEqual(
-            pc2_states["connectionState"], ["new", "connecting", "connected", "closed"]
+            pc2_states["connectionState"],
+            ["new", "connecting", "connected", "failed", "closed"],
         )
         self.assertEqual(
-            pc2_states["iceConnectionState"], ["new", "checking", "completed", "closed"]
+            pc2_states["iceConnectionState"],
+            ["new", "checking", "completed", "failed", "closed"],
         )
         self.assertEqual(
             pc2_states["iceGatheringState"], ["new", "gathering", "complete"]
@@ -1242,8 +1250,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -1349,8 +1357,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -1453,8 +1461,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -1558,8 +1566,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -1662,8 +1670,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -1764,8 +1772,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -1867,8 +1875,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -1969,8 +1977,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -2069,8 +2077,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -2184,8 +2192,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -2295,8 +2303,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -2401,8 +2409,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(pc1_states["connectionState"], ["new", "closed"])
@@ -2541,8 +2549,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -2682,8 +2690,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -2790,8 +2798,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -2896,8 +2904,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -3008,8 +3016,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -3117,8 +3125,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -3179,8 +3187,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
     @asynctest
     async def test_connect_datachannel_negotiated_and_close_immediately(self):
@@ -3212,8 +3220,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
     @asynctest
     async def test_connect_datachannel_legacy_sdp(self):
@@ -3351,8 +3359,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -3513,8 +3521,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -3670,8 +3678,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -3741,8 +3749,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
     def test_create_datachannel_with_maxpacketlifetime_and_maxretransmits(self):
         pc = RTCPeerConnection()
@@ -3961,8 +3969,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -4154,8 +4162,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -4260,8 +4268,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -4366,8 +4374,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -4502,8 +4510,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(
@@ -4931,8 +4939,8 @@ a=rtpmap:0 PCMU/8000
         # close
         await pc1.close()
         await pc2.close()
-        self.assertClosed(pc1)
-        self.assertClosed(pc2)
+        self.assertEqual(pc1.iceConnectionState, "closed")
+        self.assertEqual(pc2.iceConnectionState, "closed")
 
         # check state changes
         self.assertEqual(

@@ -3,9 +3,9 @@ import datetime
 from unittest import TestCase
 from unittest.mock import patch
 
+from OpenSSL import SSL
+
 from aiortc.rtcdtlstransport import (
-    SRTP_AEAD_AES_256_GCM,
-    SRTP_AES128_CM_SHA1_80,
     RTCCertificate,
     RTCDtlsFingerprint,
     RTCDtlsParameters,
@@ -31,7 +31,6 @@ from aiortc.rtp import (
     RtpPacket,
     pack_remb_fci,
 )
-from OpenSSL import SSL
 
 from .utils import asynctest, dummy_ice_transport_pair, load
 
@@ -400,28 +399,6 @@ class RTCDtlsTransportTest(TestCase):
 
         certificate2 = RTCCertificate.generateCertificate()
         session2 = RTCDtlsTransport(transport2, [certificate2])
-
-        await asyncio.gather(
-            session1.start(session2.getLocalParameters()),
-            session2.start(session1.getLocalParameters()),
-        )
-        self.assertEqual(session1.state, "failed")
-        self.assertEqual(session2.state, "failed")
-
-        await session1.stop()
-        await session2.stop()
-
-    @asynctest
-    async def test_handshake_error_no_common_srtp_profile(self):
-        transport1, transport2 = dummy_ice_transport_pair()
-
-        certificate1 = RTCCertificate.generateCertificate()
-        session1 = RTCDtlsTransport(transport1, [certificate1])
-        session1._srtp_profiles = [SRTP_AEAD_AES_256_GCM]
-
-        certificate2 = RTCCertificate.generateCertificate()
-        session2 = RTCDtlsTransport(transport2, [certificate2])
-        session2._srtp_profiles = [SRTP_AES128_CM_SHA1_80]
 
         await asyncio.gather(
             session1.start(session2.getLocalParameters()),

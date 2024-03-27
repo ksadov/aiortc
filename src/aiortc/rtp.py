@@ -663,8 +663,7 @@ class RtpPacket:
     def __repr__(self) -> str:
         return (
             f"RtpPacket(seq={self.sequence_number}, ts={self.timestamp}, "
-            f"marker={self.marker}, payload={self.payload_type}, "
-            f"{len(self.payload)} bytes)"
+            f"marker={self.marker}, payload={self.payload_type}, {len(self.payload)} bytes)"
         )
 
     @classmethod

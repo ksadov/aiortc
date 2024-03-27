@@ -1,5 +1,5 @@
 from fractions import Fraction
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, cast
 
 from .frame import Frame
 

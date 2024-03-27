@@ -128,8 +128,7 @@ class RTCDataChannel(AsyncIOEventEmitter):
     @property
     def ordered(self) -> bool:
         """
-        Indicates whether or not the data channel guarantees in-order delivery of
-        messages.
+        Indicates whether or not the data channel guarantees in-order delivery of messages.
         """
         return self.__parameters.ordered
 

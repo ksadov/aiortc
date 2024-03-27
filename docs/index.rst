@@ -1,25 +1,25 @@
 aiortc
 =========
 
-.. image:: https://img.shields.io/pypi/l/aiortc.svg
-   :target: https://pypi.python.org/pypi/aiortc
-   :alt: License
+|pypi-v| |pypi-pyversions| |pypi-l| |tests| |codecov| |gitter|
 
-.. image:: https://img.shields.io/pypi/v/aiortc.svg
-   :target: https://pypi.python.org/pypi/aiortc
-   :alt: Version
+.. |pypi-v| image:: https://img.shields.io/pypi/v/aiortc.svg
+    :target: https://pypi.python.org/pypi/aiortc
 
-.. image:: https://img.shields.io/pypi/pyversions/aiortc.svg
-   :target: https://pypi.python.org/pypi/aiortc
-   :alt: Python versions
+.. |pypi-pyversions| image:: https://img.shields.io/pypi/pyversions/aiortc.svg
+    :target: https://pypi.python.org/pypi/aiortc
 
-.. image:: https://github.com/aiortc/aiortc/workflows/tests/badge.svg
-   :target: https://github.com/aiortc/aiortc/actions
-   :alt: Tests
+.. |pypi-l| image:: https://img.shields.io/pypi/l/aiortc.svg
+    :target: https://pypi.python.org/pypi/aiortc
 
-.. image:: https://img.shields.io/codecov/c/github/aiortc/aiortc.svg
-   :target: https://codecov.io/gh/aiortc/aiortc
-   :alt: Coverage
+.. |tests| image:: https://github.com/aiortc/aiortc/workflows/tests/badge.svg
+    :target: https://github.com/aiortc/aiortc/actions
+
+.. |codecov| image:: https://img.shields.io/codecov/c/github/aiortc/aiortc.svg
+    :target: https://codecov.io/gh/aiortc/aiortc
+
+.. |gitter| image:: https://img.shields.io/gitter/room/aiortc/Lobby.svg
+    :target: https://gitter.im/aiortc/Lobby
 
 ``aiortc`` is a library for `Web Real-Time Communication (WebRTC)`_ and
 `Object Real-Time Communication (ORTC)`_ in Python. It is built on top of

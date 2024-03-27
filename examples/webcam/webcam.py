@@ -7,6 +7,7 @@ import platform
 import ssl
 
 from aiohttp import web
+
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from aiortc.contrib.media import MediaPlayer, MediaRelay
 from aiortc.rtcrtpsender import RTCRtpSender
@@ -120,7 +121,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="WebRTC webcam demo")
     parser.add_argument("--cert-file", help="SSL certificate file (for HTTPS)")
     parser.add_argument("--key-file", help="SSL key file (for HTTPS)")
-    parser.add_argument("--play-from", help="Read the media from a file and sent it.")
+    parser.add_argument("--play-from", help="Read the media from a file and sent it."),
     parser.add_argument(
         "--play-without-decoding",
         help=(

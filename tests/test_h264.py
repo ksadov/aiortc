@@ -3,11 +3,12 @@ import io
 from contextlib import redirect_stderr
 from unittest import TestCase
 
+from av import Packet
+
 from aiortc.codecs import get_decoder, get_encoder, h264
 from aiortc.codecs.h264 import H264Decoder, H264Encoder, H264PayloadDescriptor
 from aiortc.jitterbuffer import JitterFrame
 from aiortc.rtcrtpparameters import RTCRtpCodecParameters
-from av import Packet
 
 from .codecs import CodecTestCase
 from .utils import load
@@ -213,35 +214,35 @@ class H264Test(CodecTestCase):
 
         # 3-byte start code
         packages = list(
-            H264Encoder._split_bitstream(b"\x00\x00\x01\xff\x00\x00\x01\xfb")
+            H264Encoder._split_bitstream(b"\x00\x00\x01\xFF\x00\x00\x01\xFB")
         )
-        self.assertEqual(packages, [b"\xff", b"\xfb"])
+        self.assertEqual(packages, [b"\xFF", b"\xFB"])
 
         # 4-byte start code
         packages = list(
-            H264Encoder._split_bitstream(b"\x00\x00\x00\x01\xff\x00\x00\x00\x01\xfb")
+            H264Encoder._split_bitstream(b"\x00\x00\x00\x01\xFF\x00\x00\x00\x01\xFB")
         )
-        self.assertEqual(packages, [b"\xff", b"\xfb"])
+        self.assertEqual(packages, [b"\xFF", b"\xFB"])
 
         # Multiple bytes in a packet
         packages = list(
             H264Encoder._split_bitstream(
-                b"\x00\x00\x00\x01\xff\xab\xcd\x00\x00\x00\x01\xfb"
+                b"\x00\x00\x00\x01\xFF\xAB\xCD\x00\x00\x00\x01\xFB"
             )
         )
-        self.assertEqual(packages, [b"\xff\xab\xcd", b"\xfb"])
+        self.assertEqual(packages, [b"\xFF\xAB\xCD", b"\xFB"])
 
         # Skip leading 0s
-        packages = list(H264Encoder._split_bitstream(b"\x00\x00\x00\x01\xff"))
-        self.assertEqual(packages, [b"\xff"])
+        packages = list(H264Encoder._split_bitstream(b"\x00\x00\x00\x01\xFF"))
+        self.assertEqual(packages, [b"\xFF"])
 
         # Both leading and trailing 0s
         packages = list(
             H264Encoder._split_bitstream(
-                b"\x00\x00\x00\x00\x00\x00\x01\xff\x00\x00\x00\x00\x00"
+                b"\x00\x00\x00\x00\x00\x00\x01\xFF\x00\x00\x00\x00\x00"
             )
         )
-        self.assertEqual(packages, [b"\xff\x00\x00\x00\x00\x00"])
+        self.assertEqual(packages, [b"\xFF\x00\x00\x00\x00\x00"])
 
     def test_packetize_one_small(self):
         packages = [bytes([0xFF, 0xFF])]

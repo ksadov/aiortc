@@ -8,9 +8,10 @@ import uuid
 
 import cv2
 from aiohttp import web
+from av import VideoFrame
+
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
 from aiortc.contrib.media import MediaBlackhole, MediaPlayer, MediaRecorder, MediaRelay
-from av import VideoFrame
 
 ROOT = os.path.dirname(__file__)
 
@@ -189,7 +190,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--port", type=int, default=8080, help="Port for HTTP server (default: 8080)"
     )
-    parser.add_argument("--record-to", help="Write received media to a file.")
+    parser.add_argument("--record-to", help="Write received media to a file."),
     parser.add_argument("--verbose", "-v", action="count")
     args = parser.parse_args()
 
