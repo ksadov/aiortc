@@ -311,10 +311,11 @@ class RTCPeerConnection(AsyncIOEventEmitter):
         self.__stream_id = str(uuid.uuid4())
         self.__transceivers: List[RTCRtpTransceiver] = []
 
+        self.__closeTask: Optional[asyncio.Task] = None
         self.__connectionState = "new"
         self.__iceConnectionState = "new"
         self.__iceGatheringState = "new"
-        self.__isClosed = False
+        self.__isClosed: Optional[asyncio.Future[bool]] = None
         self.__signalingState = "stable"
 
         self.__currentLocalDescription: Optional[sdp.SessionDescription] = None
@@ -385,7 +386,8 @@ class RTCPeerConnection(AsyncIOEventEmitter):
         """
         The current signaling state.
 
-        Possible values: `"closed"`, `"have-local-offer"`, `"have-remote-offer`", `"stable"`.
+        Possible values: `"closed"`, `"have-local-offer"`, `"have-remote-offer`",
+        `"stable"`.
 
         When the state changes, the `"signalingstatechange"` event is fired.
         """
@@ -395,7 +397,8 @@ class RTCPeerConnection(AsyncIOEventEmitter):
         """
         Add a new :class:`RTCIceCandidate` received from the remote peer.
 
-        The specified candidate must have a value for either `sdpMid` or `sdpMLineIndex`.
+        The specified candidate must have a value for either `sdpMid` or
+        `sdpMLineIndex`.
 
         :param candidate: The new remote candidate.
         """
@@ -478,8 +481,9 @@ class RTCPeerConnection(AsyncIOEventEmitter):
         Terminate the ICE agent, ending ICE processing and streams.
         """
         if self.__isClosed:
+            await self.__isClosed
             return
-        self.__isClosed = True
+        self.__isClosed = asyncio.Future()
         self.__setSignalingState("closed")
 
         # stop senders / receivers
@@ -504,6 +508,8 @@ class RTCPeerConnection(AsyncIOEventEmitter):
         # no more events will be emitted, so remove all event listeners
         # to facilitate garbage collection.
         self.remove_all_listeners()
+
+        self.__isClosed.set_result(True)
 
     async def createAnswer(self):
         """
@@ -784,7 +790,7 @@ class RTCPeerConnection(AsyncIOEventEmitter):
         # configure direction
         for t in self.__transceivers:
             if description.type in ["answer", "pranswer"]:
-                t._currentDirection = and_direction(t.direction, t._offerDirection)
+                t._setCurrentDirection(and_direction(t.direction, t._offerDirection))
 
         # gather candidates
         await self.__gather()
@@ -866,7 +872,7 @@ class RTCPeerConnection(AsyncIOEventEmitter):
                 # configure direction
                 direction = reverse_direction(media.direction)
                 if description.type in ["answer", "pranswer"]:
-                    transceiver._currentDirection = direction
+                    transceiver._setCurrentDirection(direction)
                 else:
                     transceiver._offerDirection = direction
 
@@ -1176,6 +1182,14 @@ class RTCPeerConnection(AsyncIOEventEmitter):
             self.__connectionState = state
             self.emit("connectionstatechange")
 
+        # if all DTLS connections are closed, initiate a shutdown
+        if (
+            not self.__isClosed
+            and self.__closeTask is None
+            and dtlsStates == set(["closed"])
+        ):
+            self.__closeTask = asyncio.ensure_future(self.close())
+
     def __updateIceConnectionState(self) -> None:
         # compute new state
         # NOTE: we do not have "connected" or "disconnected" states
@@ -1225,7 +1239,8 @@ class RTCPeerConnection(AsyncIOEventEmitter):
             if description.type == "offer":
                 if self.signalingState not in ["stable", "have-local-offer"]:
                     raise InvalidStateError(
-                        f'Cannot handle offer in signaling state "{self.signalingState}"'
+                        "Cannot handle offer in signaling state "
+                        f'"{self.signalingState}"'
                     )
             elif description.type == "answer":
                 if self.signalingState not in [
@@ -1233,13 +1248,15 @@ class RTCPeerConnection(AsyncIOEventEmitter):
                     "have-local-pranswer",
                 ]:
                     raise InvalidStateError(
-                        f'Cannot handle answer in signaling state "{self.signalingState}"'
+                        "Cannot handle answer in signaling state "
+                        f'"{self.signalingState}"'
                     )
         else:
             if description.type == "offer":
                 if self.signalingState not in ["stable", "have-remote-offer"]:
                     raise InvalidStateError(
-                        f'Cannot handle offer in signaling state "{self.signalingState}"'
+                        "Cannot handle offer in signaling state "
+                        f'"{self.signalingState}"'
                     )
             elif description.type == "answer":
                 if self.signalingState not in [
@@ -1247,7 +1264,8 @@ class RTCPeerConnection(AsyncIOEventEmitter):
                     "have-remote-pranswer",
                 ]:
                     raise InvalidStateError(
-                        f'Cannot handle answer in signaling state "{self.signalingState}"'
+                        "Cannot handle answer in signaling state "
+                        f'"{self.signalingState}"'
                     )
 
         for media in description.media:
